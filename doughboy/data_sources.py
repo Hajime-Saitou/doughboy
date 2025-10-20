@@ -9,7 +9,11 @@ import doughboy.prop_types as prop_types
 
 class data_source_page:
     def __init__(self):
-        pass
+        self.payload:dict = None
+        self.url = props.props("url", prop_types.url_prop)
+        self.icon = props.props("icon", prop_types.icon_prop)
+        self.parent_database_id:str = None
+        self.parent_data_source_id:str = None
 
 class data_source:
     __data_source_id__:str = None
@@ -67,13 +71,19 @@ class doughboy:
         }
         target_properties:dict = { key: value for key, value in page_object.__dict__.items() if isinstance(value, prop_types.prop_type_base) and value.value_updated }
         if not target_properties:   # all properties is up to date. skip update.
-            return None
+            if page_object.property_updated == False:
+                return None
+        else:
+            for value in target_properties.values():
+                if value.type_name not in [ "icon", "url" ]:
+                    payload.update(value.to_dict())
+                else:
+                    payload["properties"].update(value.to_dict())
 
-        [ payload["properties"].update(value.to_dict()) for value in target_properties.values() ]
         response = self.api_handler.patch(f"pages/{page_object.id}", payload)
         [ setattr(value, "value_updated", False) for value in target_properties.values() ]
         return response
-    
+
     def delete_one(self, page_object:data_source_page=None) -> object:
         if not self.__is_page_object(page_object):
             raise ValueError("page_object is required")
@@ -99,7 +109,12 @@ class doughboy:
         if not target_properties:
             raise ValueError("page_object has no properties")
 
-        [ payload["properties"].update(value.to_dict()) for value in target_properties.values() ]
+        for value in target_properties.values():
+            if value.type_name not in [ "icon", "url" ]:
+                payload.update(value.to_dict())
+            else:
+                payload["properties"].update(value.to_dict())
+
         response = self.api_handler.post("pages", payload)
         page_object.id = response.get("id")
         [ setattr(value, "value_updated", False) for value in target_properties.values() ]
@@ -173,6 +188,12 @@ class selector(accessor):
         for page in pages:
             new_page_object:data_source_page = data_source_page()
             new_page_object.id = page.get("id")
+            new_page_object.payload = page
+            new_page_object.parent_database_id = page["parent"]["database_id"]
+            new_page_object.parent_data_source_id = page["parent"]["data_source_id"]
+            new_page_object.url = page["url"]
+            new_page_object.icon = page["icon"]
+
             for property_name, property_value in page["properties"].items():
                 if property_name not in self.selection_properties:
                     continue

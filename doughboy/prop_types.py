@@ -567,3 +567,133 @@ class file_prop(prop_type_base):
 
         self.payload["files"] = quoted_files
         self.value_updated = True
+
+class icon_prop(prop_type_base):
+    type_name:str = "icon"
+
+    def __init__(self, name, payload={}):
+        super().__init__(name, payload)
+
+    @property
+    def default_value(self) -> dict:
+        return { "icon": None }
+
+    @property
+    def value(self) -> str:
+        if "icon" not in self.payload:
+            self.payload.update(self.default_value)
+
+        if self.payload["icon"] is None:
+            return None
+
+        if "file" in self.payload["icon"]:
+            return self.file
+        elif "external" in self.payload["icon"]:
+            return self.external
+
+        return self.emoji
+
+    @value.setter
+    def value(self, value:dict) -> None:
+        if set(value) ^ set(self.payload["icon"]):
+            return
+
+        if "file" in value:
+            self.file = value["file"]
+        elif "eternal" in value:
+            self.external = value["external"]
+        elif "emoji" in value:
+            self.emoji = value["emoji"]
+        else:
+            raise ValueError(f"unknown icon type: {value.keys()}.")
+
+    @property
+    def file(self) -> str:
+        if "icon" not in self.payload:
+            self.payload.update(self.default_value)
+
+        if "file" not in self.payload["icon"]:
+            return None
+
+        return self.payload["icon"]["file"]["url"]
+
+    @file.setter
+    def file(self, value:str) -> None:
+        if set(value) ^ set(self.file):
+            return
+
+        if value is None:
+            self.payload["icon"] = None
+            return
+        
+        self.payload["icon"].update({ "file": { "url": value } })
+        self.value_updated = True
+
+    @property
+    def external(self) -> str:
+        if "icon" not in self.payload:
+            self.payload.update(self.default_value)
+
+        if "external" not in self.payload["icon"]:
+            return None
+
+        return self.payload["icon"]["external"]["url"]
+
+    @external.setter
+    def external(self, value:str) -> None:
+        if set(value) ^ set(self.external):
+            return
+
+        if value is None:
+            self.payload["icon"] = None
+            return
+        
+        self.payload["icon"].update({ "external": { "url": value } })
+        self.value_updated = True
+
+    @property
+    def emoji(self) -> str:
+        if "icon" not in self.payload:
+            self.payload.update(self.default_value)
+
+        if "emoji" not in self.payload["icon"]:
+            return None
+
+        return self.payload["icon"]["emoji"]["url"]
+
+    @emoji.setter
+    def emoji(self, value:str) -> None:
+        if set(value) ^ set(self.emoji):
+            return
+
+        if value is None:
+            self.payload["icon"] = None
+            return
+        
+        self.payload["icon"].update({ "emoji": value })
+        self.value_updated = True
+
+class url_prop(prop_type_base):
+    type_name:str = "url"
+
+    def __init__(self, name, payload={}):
+        super().__init__(name, payload)
+
+    @property
+    def default_value(self) -> dict:
+        return { "url": None }
+
+    @property
+    def value(self) -> str:
+        if "url" not in self.payload:
+            self.payload.update(self.default_value)
+
+        return self.payload["url"]
+
+    @value.setter
+    def value(self, value:dict) -> None:
+        if value == self.payload["url"]:
+            return
+
+        self.payload["url"] = value
+        self.value_updated = True
