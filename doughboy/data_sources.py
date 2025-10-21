@@ -76,7 +76,7 @@ class doughboy:
         else:
             for value in target_properties.values():
                 if value.type_name not in [ "icon", "url" ]:
-                    payload.update(value.to_dict())
+                    payload["properties"].update(value.to_dict())
                 else:
                     payload["properties"].update(value.to_dict())
 
@@ -111,14 +111,19 @@ class doughboy:
 
         for value in target_properties.values():
             if value.type_name not in [ "icon", "url" ]:
-                payload.update(value.to_dict())
+                payload["properties"].update(value.to_dict())
             else:
                 payload["properties"].update(value.to_dict())
 
         response = self.api_handler.post("pages", payload)
         page_object.id = response.get("id")
         [ setattr(value, "value_updated", False) for value in target_properties.values() ]
-        return response
+
+        page_object.id = response["id"]
+        page_object.parent_data_source_id= response["parent"]["data_source_id"]
+        page_object.parent_database_id = response["parent"]["database_id"]
+        page_object.payload = response
+        return page_object
 
 class accessor:
     def __init__(self, controller:doughboy):
@@ -257,7 +262,7 @@ class insertor(accessor):
         super().__init__(controller)
         self.data_source_class:data_source = data_source_class
 
-    def values(self, **kwargs) -> None:
+    def values(self, **kwargs) -> data_source_page:
         if len(kwargs) < 1:
             raise ValueError("at least one property is required")
 
@@ -273,3 +278,4 @@ class insertor(accessor):
                 raise ValueError(f"{key} is not a property of {self.data_source_class.__name__}")
 
         self.controller.insert_one(new_page_object)
+        return new_page_object
