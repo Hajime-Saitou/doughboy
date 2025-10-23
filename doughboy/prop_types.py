@@ -659,7 +659,7 @@ class icon_prop(prop_type_base):
         if "emoji" not in self.payload["icon"]:
             return None
 
-        return self.payload["icon"]["emoji"]["url"]
+        return self.payload["icon"]["emoji"]
 
     @emoji.setter
     def emoji(self, value:str) -> None:
@@ -692,7 +692,7 @@ class url_prop(prop_type_base):
 
     @value.setter
     def value(self, value:dict) -> None:
-        if value == self.payload["url"]:
+        if value == self.value:
             return
 
         self.payload["url"] = value
