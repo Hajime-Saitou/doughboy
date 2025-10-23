@@ -595,7 +595,13 @@ class icon_prop(prop_type_base):
 
     @value.setter
     def value(self, value:dict) -> None:
-        if set(value) ^ set(self.payload["icon"]):
+        if value is None:
+            if self.value is not None:
+                self.value_updated = True
+            self.payload["icon"] = None
+            return
+
+        if set(value) ^ set(self.value):
             return
 
         if "file" in value:
