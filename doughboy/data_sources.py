@@ -12,6 +12,7 @@ class data_source_page:
         self.payload:dict = None
         self.url = prop_types.url_prop("url")
         self.icon = prop_types.icon_prop("icon")
+        self.data_source_id:str = None
 
     def set_payload(self, payload:dict=None):
         if payload is None:
@@ -21,6 +22,7 @@ class data_source_page:
         self.id = payload["id"]
         self.icon.payload = { "icon": payload["icon"] }
         self.url.value = payload["url"]
+        self.data_source_id = payload["parent"]["data_source_id"]
 
 class data_source:
     __data_source_id__:str = None
@@ -107,6 +109,11 @@ class doughboy:
         if not self.__is_page_object(page_object):
             raise ValueError("page_object is required")
 
+        # clear page property if selected page    
+        if page_object.payload is not None and "id" in page_object.payload:
+            page_object.url.value = None
+            page_object.icon.value = None
+
         payload:dict = {
             "parent": {
                 "data_source_id": page_object.data_source_id,
@@ -116,7 +123,7 @@ class doughboy:
         target_properties:dict = { key: value for key, value in page_object.__dict__.items() if isinstance(value, prop_types.prop_type_base) }
         if not target_properties:
             raise ValueError("page_object has no properties")
-        
+
         for value in target_properties.values():
             if value.type_name not in [ "icon", "url" ]:
                 payload["properties"].update(value.to_dict())           # data source property
@@ -129,6 +136,7 @@ class doughboy:
         [ setattr(value, "value_updated", False) for value in target_properties.values() ]
 
         page_object.set_payload(response)
+
         return page_object
 
 class accessor:
