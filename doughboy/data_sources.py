@@ -37,6 +37,29 @@ class data_source:
         new_page_object.data_source_id = cls.__data_source_id__
 
         return new_page_object
+    
+class describer:
+    def __init__(self):
+        self.title:str = None
+
+    def __str__(self) -> str:
+        messages = [
+            f"{self.title}:",
+            "",
+            f"{'property name':32} {'type':16} {'id':8}",
+            "-" * 32 + " " + "-" * 16 + " " + "-" * 8,
+        ]
+        for attribute_name in dir(self):
+            if attribute_name.startswith("__"):
+                continue
+
+            if attribute_name == "title":
+                continue
+
+            value:dict = getattr(self, attribute_name)
+            messages.append(f"{attribute_name:32} {value['type']:16} {value['id']:8}")
+
+        return "\n".join(messages)
 
 class doughboy:
     def __init__(self, api_key:str):
@@ -138,6 +161,18 @@ class doughboy:
         page_object.set_payload(response)
 
         return page_object
+
+    def describe(self, data_source_class:data_source):
+        if not self.__is_data_source_class(data_source_class):
+            raise ValueError("exactly one data_source_class is required")
+
+        describe_object:describer = describer()
+        response = self.api_handler.get(f"data_sources/{data_source_class.__data_source_id__}")
+        describe_object.title = "".join([ item["text"]["content"] for item in response["title"] ]) if len(response["title"]) > 0 else None
+        for key, value in response["properties"].items():
+            setattr(describe_object, key, { "type": value["type"], "id": value["id"] })
+
+        return describe_object
 
 class accessor:
     def __init__(self, controller:doughboy):
