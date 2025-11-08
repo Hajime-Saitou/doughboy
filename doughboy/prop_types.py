@@ -293,6 +293,14 @@ class multi_select_prop(prop_type_base):
         self.payload["multi_select"] = [ { "name": value } for value in values ]
         self.value_updated = True
 
+    def replace(self, old_name, new_name):
+        try:
+            index = self.value.index(old_name)
+            self.payload["multi_select"][index] = { "name": new_name }
+            self.value_updated = True
+        except:
+            raise ValueError(f"multi-select name {old_name} is not in list.")
+
 class status_prop(prop_type_base):
     type_name:str = "status"
 
@@ -356,6 +364,15 @@ class people_prop(prop_type_base):
 
         self.payload["people"] = [ { "id": value } for value in values ]
         self.value_updated = True
+
+    def replace(self, old_id, new_id):
+        try:
+            index = self.value.index(old_id)
+            self.payload["people"][index] = { "id": new_id }
+            self.value_updated = True
+        except Exception as e:
+            print(e)
+            raise ValueError(f"people id {old_id} is not in list.")
 
 class checkbox_prop(prop_type_base):
     type_name:str = "checkbox"
