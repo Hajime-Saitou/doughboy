@@ -6,11 +6,8 @@
 import requests
 import json
 
-base_uri:str = "https://api.notion.com/v1/"
-api_version:str = "2025-09-03"
-
 class api_handler:
-    def __init__(self, api_key:str):
+    def __init__(self, api_key:str, api_version:str = "2025-09-03", base_url:str = "https://api.notion.com/v1/"):
         if not api_key:
             raise ValueError("API key is required")
 
@@ -21,29 +18,35 @@ class api_handler:
             raise ValueError("Invalid API key format")
 
         self.api_key:str = api_key
-        self.headers:dict = {
+        self.api_version:str = api_version
+        self.base_url:str = base_url
+
+    def make_headers(self, content_type="application/json"):
+        return {
             "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "Notion-Version": api_version
+            "Content-Type": content_type,
+            "Notion-Version": self.api_version
         }
 
+    def make_endpoint_url(self, endpoint:str) -> str:
+        return f"{self.base_url}{endpoint}"
+
     def get(self, endpoint:str, params=None) -> dict:
-        response = requests.get(f"{base_uri}{endpoint}", headers=self.headers, params=params)
+        response = requests.get(self.make_endpoint_url(endpoint), headers=self.make_headers(), params=params)
         response.raise_for_status()
         return response.json()
 
     def post(self, endpoint:str, data:dict) -> dict:
-        response = requests.post(f"{base_uri}{endpoint}", headers=self.headers, data=json.dumps(data))
+        response = requests.post(self.make_endpoint_url(endpoint), headers=self.make_headers(), data=json.dumps(data))
         response.raise_for_status()
         return response.json()
 
     def patch(self, endpoint:str, data:dict) -> dict:
-        response = requests.patch(f"{base_uri}{endpoint}", headers=self.headers, data=json.dumps(data))
+        response = requests.patch(self.make_endpoint_url(endpoint), headers=self.make_headers(), data=json.dumps(data))
         response.raise_for_status()
         return response.json()
 
     def delete(self, endpoint:str) -> bool:
-        response = requests.delete(f"{base_uri}{endpoint}", headers=self.headers)
+        response = requests.delete(self.make_endpoint_url(endpoint), headers=self.make_headers())
         response.raise_for_status()
         return response.status_code == 204
-
