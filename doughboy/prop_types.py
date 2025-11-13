@@ -299,7 +299,17 @@ class multi_select_prop(prop_type_base):
             self.payload["multi_select"][index] = { "name": new_name }
             self.value_updated = True
         except:
-            raise ValueError(f"multi-select name {old_name} is not in list.")
+            raise KeyError(f"multi-select name {old_name} is not in list.")
+
+    def remove(self, name):
+        try:
+            index = self.value.index(name)
+            del self.payload["multi_select"][index]
+        except Exception as e:
+            raise KeyError(f"multi-select name {id} is not in list.")
+
+    def append(self, name):
+        self.payload["multi_select"].append({ "name": name })
 
 class status_prop(prop_type_base):
     type_name:str = "status"
@@ -371,8 +381,17 @@ class people_prop(prop_type_base):
             self.payload["people"][index] = { "id": new_id }
             self.value_updated = True
         except Exception as e:
-            print(e)
-            raise ValueError(f"people id {old_id} is not in list.")
+            raise KeyError(f"people id {old_id} is not in list.")
+
+    def remove(self, id):
+        try:
+            index = self.value.index(id)
+            del self.payload["people"][index]
+        except Exception as e:
+            raise KeyError(f"people id {id} is not in list.")
+
+    def append(self, id):
+        self.payload["people"].append({ "id": id })
 
 class checkbox_prop(prop_type_base):
     type_name:str = "checkbox"
