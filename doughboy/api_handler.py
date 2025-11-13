@@ -6,7 +6,7 @@
 import requests
 import json
 
-class api_handler:
+class notion_api_handler:
     def __init__(self, api_key:str, api_version:str = "2025-09-03", base_url:str = "https://api.notion.com/v1/"):
         if not api_key:
             raise ValueError("API key is required")

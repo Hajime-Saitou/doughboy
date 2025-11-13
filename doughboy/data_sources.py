@@ -63,7 +63,7 @@ class describer:
 
 class doughboy:
     def __init__(self, api_key:str):
-        self.api_handler:api_handler = api_handler(api_key)
+        self.api_handler:notion_api_handler = notion_api_handler(api_key)
         self.selection_columns:list = None
         self.filter:dict = None
 
