@@ -175,9 +175,6 @@ class doughboy:
 
         return describe_object
 
-    def upload_file(self, filename:str) -> str:
-        return self.file_uploader.direct_upload(filename)
-
 class accessor:
     def __init__(self, controller:doughboy):
         self.controller:doughboy = controller
@@ -251,8 +248,10 @@ class selector(accessor):
                 if property_name not in self.selection_properties:
                     continue
 
-                property = self.data_source_class.__dict__.get(property_name)
-                setattr(new_page_object, property_name, property.property_type_class(property_name, property_value))
+                property:props.props = self.data_source_class.__dict__.get(property_name)
+                property_type_class:prop_types.prop_type_base = property.property_type_class(property_name, property_value)
+                property_type_class.parent = self.controller
+                setattr(new_page_object, property_name, property_type_class)
             new_page_objects.append(new_page_object)
 
         return new_page_objects
@@ -317,9 +316,10 @@ class insertor(accessor):
         new_page_object:data_source_page = self.data_source_class.create_page_object()
         for key, value in kwargs.items():
             if hasattr(new_page_object, key):
-                property:object = getattr(new_page_object, key)
+                property:prop_types.prop_type_base = getattr(new_page_object, key)
                 if isinstance(property, prop_types.prop_type_base):
                     property.value = value
+                    property.parent = self.controller
                 else:
                     raise ValueError(f"{key} is not a property")
             else:

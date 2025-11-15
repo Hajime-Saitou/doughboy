@@ -10,6 +10,7 @@ class prop_type_base:
         self.name:str = name
         self.payload:dict = payload
         self.value_updated:bool = False
+        self.parent = None
 
     @property
     def value(self) -> dict:
@@ -607,6 +608,9 @@ class file_prop(prop_type_base):
     def append(self, file_info:dict) -> None:
         self.payload["files"].append(file_info)
         self.value_updated = True
+
+    def upload(self, filename:str) -> str:
+        self.append(self.parent.file_uploader.direct_upload(filename))
 
 class icon_prop(prop_type_base):
     type_name:str = "icon"
