@@ -64,6 +64,7 @@ class describer:
 class doughboy:
     def __init__(self, api_key:str):
         self.api_handler:notion_api_handler = notion_api_handler(api_key)
+        self.file_uploader:file_uploader = file_uploader(self.api_handler)
         self.selection_columns:list = None
         self.filter:dict = None
 
@@ -173,6 +174,9 @@ class doughboy:
             setattr(describe_object, key, { "type": value["type"], "id": value["id"] })
 
         return describe_object
+
+    def upload_file(self, filename:str) -> str:
+        return self.file_uploader.direct_upload(filename)
 
 class accessor:
     def __init__(self, controller:doughboy):

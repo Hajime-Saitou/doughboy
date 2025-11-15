@@ -604,6 +604,10 @@ class file_prop(prop_type_base):
         self.payload["files"] = quoted_files
         self.value_updated = True
 
+    def append(self, file_info:dict) -> None:
+        self.payload["files"].append(file_info)
+        self.value_updated = True
+
 class icon_prop(prop_type_base):
     type_name:str = "icon"
 
