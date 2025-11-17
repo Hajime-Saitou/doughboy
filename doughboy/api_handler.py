@@ -5,6 +5,8 @@
 # MIT License
 import requests
 import json
+import math
+import time
 import os
 
 class notion_api_handler:
@@ -35,23 +37,35 @@ class notion_api_handler:
     def make_endpoint_url(self, endpoint:str) -> str:
         return f"{self.base_url}{endpoint}"
 
-    def get(self, endpoint:str, params=None) -> dict:
-        response = requests.get(self.make_endpoint_url(endpoint), headers=self.make_headers("application/json"), params=params)
+    def get(self, endpoint:str, params=None, headers:dict=None) -> dict:
+        if not headers:
+            headers = self.make_headers("application/json")
+
+        response = requests.get(self.make_endpoint_url(endpoint), headers=headers, params=params)
         response.raise_for_status()
         return response.json()
 
-    def post(self, endpoint:str, data:dict) -> dict:
-        response = requests.post(self.make_endpoint_url(endpoint), headers=self.make_headers("application/json"), data=json.dumps(data))
+    def post(self, endpoint:str, data:dict={}, headers:dict=None) -> dict:
+        if not headers:
+            headers = self.make_headers("application/json")
+
+        response = requests.post(self.make_endpoint_url(endpoint), headers=headers, data=json.dumps(data))
         response.raise_for_status()
         return response.json()
 
-    def patch(self, endpoint:str, data:dict) -> dict:
-        response = requests.patch(self.make_endpoint_url(endpoint), headers=self.make_headers("application/json"), data=json.dumps(data))
+    def patch(self, endpoint:str, data:dict={}, headers:dict=None) -> dict:
+        if not headers:
+            headers = self.make_headers("application/json")
+
+        response = requests.patch(self.make_endpoint_url(endpoint), headers=headers, data=json.dumps(data))
         response.raise_for_status()
         return response.json()
 
-    def delete(self, endpoint:str) -> bool:
-        response = requests.delete(self.make_endpoint_url(endpoint), headers=self.make_headers("application/json"))
+    def delete(self, endpoint:str, headers:dict=None) -> bool:
+        if not headers:
+            headers = self.make_headers("application/json")
+
+        response = requests.delete(self.make_endpoint_url(endpoint), headers=headers)
         response.raise_for_status()
         return response.status_code == 204
 
@@ -59,14 +73,16 @@ class notion_api_handler:
 class file_uploader:
     def __init__(self, api_handler):
         self.api_handler:notion_api_handler = api_handler
+        self.chunk_size = 8 * 1024 * 1024
 
-    def get_upload_id(self):
-        response = self.api_handler.post("file_uploads", {})
+    def get_upload_id(self, data={}):
+        headers:dict = self.api_handler.make_headers()
+        response = self.api_handler.post("file_uploads", data=data, headers=headers)
         return response["id"]
-
-    def direct_upload(self, filename):
+    
+    def singlepart_upload(self, filename:str) -> dict:
+        basefilename:str = os.path.basename(filename)
         upload_id:str = self.get_upload_id()
-        basefilename = os.path.basename(filename)
 
         headers:dict = self.api_handler.make_headers()
         endpoint_url:str = self.api_handler.make_endpoint_url(f"file_uploads/{upload_id}/send")
@@ -81,8 +97,41 @@ class file_uploader:
 
         return { "file_upload": { "id": upload_id }, "name": basefilename }
 
-    def multipart_upload(self, filename, number_of_part):
-        pass
+    def multipart_upload(self, filename:str) -> dict:
+        basefilename:str = os.path.basename(filename)
+        size_left_of_sending_size: int = os.path.getsize(filename)
+        number_of_parts:int = math.ceil(size_left_of_sending_size / self.chunk_size)
+
+        data = {
+            "mode": "multi_part",
+            "filename": basefilename,
+            "number_of_parts": number_of_parts,
+        }
+        upload_id:str = self.get_upload_id(data)
+
+        headers:dict = self.api_handler.make_headers()
+        endpoint_url:str = self.api_handler.make_endpoint_url(f"file_uploads/{upload_id}/send")
+        for part_number in range(1, number_of_parts + 1):
+            with open(filename, "rb") as f:
+                sending_size:int = self.chunk_size if size_left_of_sending_size >= self.chunk_size else size_left_of_sending_size
+                files = {
+                    "file": (basefilename, f.read(sending_size)),
+                    "part_number": (None, str(part_number))
+                }
+
+                response = requests.post(endpoint_url, headers=headers, files=files)
+                response.raise_for_status()
+                size_left_of_sending_size -= sending_size
+            time.sleep(0.5)
+        else:
+            self.upload_completed(upload_id)
+
+        return { "file_upload": { "id": upload_id }, "name": basefilename }
+
+    def upload_completed(self, upload_id:str):
+        headers:dict = self.api_handler.make_headers()
+        endpoint_url = f"file_uploads/{upload_id}/complete"
+        self.api_handler.post(endpoint_url, headers=headers)
 
     def impoert_external_file(self, filename, external_url):
         pass
