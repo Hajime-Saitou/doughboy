@@ -73,7 +73,7 @@ class notion_api_handler:
 class file_uploader:
     def __init__(self, api_handler):
         self.api_handler:notion_api_handler = api_handler
-        self.chunk_size = 8 * 1024 * 1024
+        self.chunk_size:int = 20 * 1024 * 1024
 
     def get_upload_id(self, data={}):
         headers:dict = self.api_handler.make_headers()
@@ -133,6 +133,30 @@ class file_uploader:
         endpoint_url = f"file_uploads/{upload_id}/complete"
         self.api_handler.post(endpoint_url, headers=headers)
 
-    def impoert_external_file(self, filename, external_url):
-        pass
-   
+    def retrieve_upload(self, upload_id:str) -> dict:
+        headers:dict = self.api_handler.make_headers()
+        endpoint_url = f"file_uploads/{upload_id}"
+        return self.api_handler.get(endpoint_url, headers=headers)
+
+    def import_external_file(self, external_url:str, filename:str) -> dict:   
+        data = {
+            "mode": "external_url",
+            "filename": filename,
+            "external_url": external_url
+        }
+        upload_id:str = self.get_upload_id(data)
+        print(upload_id)
+
+        retry_limit:int = 5
+        retry_interval:int = 2
+        for retry_count in range(1, retry_limit + 1):
+            print(f"try: {retry_count}")
+            upload_info:dict = self.retrieve_upload(upload_id)
+            print(upload_info)
+            if upload_info["status"] == "uploaded":
+                return { "file_upload": { "id": upload_id }, "name": filename }
+
+            if retry_count < retry_limit:
+                time.sleep(retry_interval ** retry_count)
+
+        raise TimeoutError("Importing external file is timed out.")

@@ -610,11 +610,14 @@ class file_prop(prop_type_base):
         self.payload["files"].append(file_info)
         self.value_updated = True
 
-    def upload(self, filename:str) -> str:
+    def upload(self, filename:str) -> None:
         if os.path.getsize(filename) > self.parent.file_uploader.chunk_size:
             self.append(self.parent.file_uploader.multipart_upload(filename))
         else:
             self.append(self.parent.file_uploader.singlepart_upload(filename))
+
+    def import_external_file(self, external_url:str, filename:str) -> None:
+        self.append(self.parent.file_uploader.import_external_file(external_url, filename))
 
 class icon_prop(prop_type_base):
     type_name:str = "icon"
