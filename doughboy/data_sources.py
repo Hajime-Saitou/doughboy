@@ -13,6 +13,7 @@ class data_source_page:
         self.url = prop_types.url_prop("url")
         self.icon = prop_types.icon_prop("icon")
         self.data_source_id:str = None
+        self.template:str = None
 
     def set_payload(self, payload:dict=None):
         if payload is None:
@@ -26,6 +27,7 @@ class data_source_page:
 
 class data_source:
     __data_source_id__:str = None
+    __template__:str = None
 
     @classmethod
     def create_page_object(cls) -> data_source_page:
@@ -35,6 +37,7 @@ class data_source:
             if isinstance(property_value, props.props):
                 setattr(new_page_object, property_name, property_value.property_type_class(property_name, {}))
         new_page_object.data_source_id = cls.__data_source_id__
+        new_page_object.template = cls.__template__
 
         return new_page_object
     
@@ -144,13 +147,20 @@ class doughboy:
             },
             "properties": {}
         }
+        if page_object.template is not None:
+            if page_object.template == "default":
+                payload["template"] = { "type": "default" }
+            else:
+                payload["template"] = { "type": "template_id", "template_id": page_object.template }
+
         target_properties:dict = { key: value for key, value in page_object.__dict__.items() if isinstance(value, prop_types.prop_type_base) }
         if not target_properties:
             raise ValueError("page_object has no properties")
 
         for value in target_properties.values():
             if value.type_name not in [ "icon", "url" ]:
-                payload["properties"].update(value.to_dict())           # data source property
+                if value.value is not None:
+                    payload["properties"].update(value.to_dict())           # data source property
             else:
                 if value.value is not None:
                     payload.update({ value.type_name: value.value })        # page property

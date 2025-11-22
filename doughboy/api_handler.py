@@ -145,18 +145,15 @@ class file_uploader:
             "external_url": external_url
         }
         upload_id:str = self.get_upload_id(data)
-        print(upload_id)
 
         retry_limit:int = 5
         retry_interval:int = 2
         for retry_count in range(1, retry_limit + 1):
-            print(f"try: {retry_count}")
             upload_info:dict = self.retrieve_upload(upload_id)
-            print(upload_info)
             if upload_info["status"] == "uploaded":
                 return { "file_upload": { "id": upload_id }, "name": filename }
 
             if retry_count < retry_limit:
                 time.sleep(retry_interval ** retry_count)
 
-        raise TimeoutError("Importing external file is timed out.")
+        raise TimeoutError("Import imcomplete. operation is timed out.")
