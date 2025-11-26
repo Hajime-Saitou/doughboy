@@ -22,7 +22,7 @@ class data_source_page:
         self.payload = payload
         self.id = payload["id"]
         self.icon.payload = { "icon": payload["icon"] }
-        self.url.value = payload["url"]
+        self.url.payload = { "url": payload["url"] }
         self.data_source_id = payload["parent"]["data_source_id"]
 
 class data_source:
