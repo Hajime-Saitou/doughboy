@@ -52,7 +52,7 @@ propsクラスの第一引数には実際のデータソースに付与したプ
 - email_prop
 - phone_number_prop
 - relation_prop
-- file_prop(対応中)
+- file_prop
 
 クラスメンバ変数名はNotionデータソースのプロパティ名と同じにします。
 
@@ -183,7 +183,7 @@ db.delete_from(データソースモデル).exec()
 通常はwhereメソッドで条件を絞り込んで使います。絞り込み条件を指定しない場合、データソース内にあるページすべてを削除します。
 
 ```
-db.delete_from(データソースモデル).where(絞り込み条件)exec()
+db.delete_from(データソースモデル).where(絞り込み条件).exec()
 ```
 
 ## データソースページを追加する

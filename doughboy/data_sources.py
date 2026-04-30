@@ -126,7 +126,7 @@ class doughboy:
 
         payload:dict = {
             "id": page_object.id,
-            "archived": True,
+            "in_trash": True,
         }
 
         return self.api_handler.patch(f"pages/{page_object.id}", payload)
