@@ -395,6 +395,17 @@ class people_prop(prop_type_base):
     def append(self, id):
         self.payload["people"].append({ "id": id })
 
+    @property
+    def names(self) -> list:
+        if "people" not in self.payload:
+            self.payload.update(self.default_value)
+
+        return [ item["name"] for item in self.payload["people"] ]
+
+    @names.setter
+    def names(self, names:list) -> None:
+        raise NotImplementedError("people_prop does not support set value by names, because of name is not unique identifier of user. Please set value by user id.")
+
 class checkbox_prop(prop_type_base):
     type_name:str = "checkbox"
 
