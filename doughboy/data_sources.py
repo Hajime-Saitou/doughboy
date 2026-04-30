@@ -107,8 +107,7 @@ class doughboy:
         }
         target_properties:dict = { key: value for key, value in page_object.__dict__.items() if isinstance(value, prop_types.prop_type_base) and value.value_updated }
         if not target_properties:   # all properties is up to date. skip update.
-            if page_object.property_updated == False:
-                return None
+            return None
         else:
             for value in target_properties.values():
                 if value.type_name not in [ "icon", "url" ]:
