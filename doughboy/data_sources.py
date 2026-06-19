@@ -247,6 +247,8 @@ class selector(accessor):
             pages.extend(response.get("results", []))
             if not response.get("has_more"):
                 break
+            else:
+                payload["start_cursor"] = response["next_cursor"]
 
         new_page_objects:list = []
         for page in pages:
